@@ -27,4 +27,5 @@ jobs:
       run: golangci-lint run ./...
 
     - name: Build
-      run: go build -v -o gs ./...
+      run: go build -v -o gs .
+
