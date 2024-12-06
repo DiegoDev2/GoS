@@ -28,10 +28,13 @@ var initCmd = &cobra.Command{
 		switch template {
 		case "api":
 			fmt.Printf("Generating API template for project: %s\n", projectName)
+
 		case "webapp":
 			fmt.Printf("Generating WebApp template for project: %s\n", projectName)
+
 		case "microservice":
 			fmt.Printf("Generating Microservice template for project: %s\n", projectName)
+
 		default:
 			fmt.Println("Unsupported template. Use 'api', 'webapp', or 'microservice'.")
 		}
@@ -40,8 +43,13 @@ var initCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(initCmd)
+
 	initCmd.Flags().StringP("name", "n", "", "Project name")
-	initCmd.MarkFlagRequired("name")
+
+	if err := initCmd.MarkFlagRequired("name"); err != nil {
+		fmt.Println("Error marking 'name' flag as required:", err)
+		os.Exit(1)
+	}
 }
 
 func Execute() {
