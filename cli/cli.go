@@ -3,7 +3,11 @@ package cli
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"time"
 
+	"github.com/briandowns/spinner"
+	"github.com/gookit/color"
 	"github.com/spf13/cobra"
 )
 
@@ -12,7 +16,7 @@ var rootCmd = &cobra.Command{
 	Short: "Go project generator",
 	Long:  `A fast and flexible project generator built with Go.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Use 'gs init <template>' to generate a project.")
+		color.Cyan.Println("GoS CLI - Use 'gs init <template>' to generate a project.")
 	},
 }
 
@@ -24,20 +28,53 @@ var initCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		template := args[0]
 		projectName, _ := cmd.Flags().GetString("name")
+		if projectName == "" {
+			color.Red.Println("Error: Project name is required.")
+			return
+		}
+
+		s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
+		s.Suffix = fmt.Sprintf("  Generating %s template for project: %s", template, projectName)
+		s.Start()
+
+		time.Sleep(3 * time.Second)
+
+		// Define un nombre de carpeta temporal para el proyecto
+		tempFolder := "gos-temp"
 
 		switch template {
 		case "api":
-			fmt.Printf("Generating API template for project: %s\n", projectName)
-
+			color.Green.Println("Generating API template...")
+			// Aquí clonamos un repositorio o generamos archivos
+			command := exec.Command("git", "clone", "https://github.com/DiegoDev2/gos-templates", tempFolder)
+			err := command.Run()
+			if err != nil {
+				color.Red.Printf("Failed to clone template repository: %v\n", err)
+				s.Stop()
+				return
+			}
 		case "webapp":
-			fmt.Printf("Generating WebApp template for project: %s\n", projectName)
-
+			color.Green.Println("Generating WebApp template...")
+			// Generación del template webapp (añade lógica si es necesario)
 		case "microservice":
-			fmt.Printf("Generating Microservice template for project: %s\n", projectName)
-
+			color.Green.Println("Generating Microservice template...")
+			// Generación del template microservice (añade lógica si es necesario)
 		default:
-			fmt.Println("Unsupported template. Use 'api', 'webapp', or 'microservice'.")
+			color.Red.Println("Unsupported template. Use 'api', 'webapp', or 'microservice'.")
+			s.Stop()
+			return
 		}
+
+		// Renombrar la carpeta principal al nombre del proyecto
+		err := os.Rename(tempFolder, projectName)
+		if err != nil {
+			color.Red.Printf("Failed to rename project folder: %v\n", err)
+			s.Stop()
+			return
+		}
+
+		s.Stop()
+		color.Green.Println("Project generated successfully!")
 	},
 }
 
@@ -45,7 +82,6 @@ func init() {
 	rootCmd.AddCommand(initCmd)
 
 	initCmd.Flags().StringP("name", "n", "", "Project name")
-
 	if err := initCmd.MarkFlagRequired("name"); err != nil {
 		fmt.Println("Error marking 'name' flag as required:", err)
 		os.Exit(1)
